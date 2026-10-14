@@ -1,0 +1,272 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="csrf-token" content="{{ csrf_token }}">
+<title>Customer feedback</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#14202B; --muted:#5B6B79; --line:#E3E8ED; --paper:#F4F6F8; --surface:#fff;
+  --accent:#0B6E83; --accent-dark:#085868; --accent-soft:#E4F2F5;
+  --good:#1F7A4D; --warn:#A8690C; --bad:#B42318;
+  --radius:10px;
+  --font:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--paper);color:var(--ink);font:400 15px/1.5 var(--font)}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.wrap{max-width:1120px;margin:0 auto;padding:28px 24px 40px}
+
+/* header */
+.top{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:20px}
+.title h1{margin:0;font-size:22px;font-weight:600;letter-spacing:-.01em}
+.title p{margin:2px 0 0;color:var(--muted);font-size:14px}
+.actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.btn{display:inline-flex;align-items:center;gap:8px;height:40px;padding:0 16px;border-radius:8px;border:1px solid var(--line);
+  background:var(--surface);font-weight:500;cursor:pointer;transition:background .15s,border-color .15s}
+.btn:hover{border-color:#C9D2DA;background:#FAFBFC}
+.btn svg{width:16px;height:16px;flex:none}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.primary:hover{background:var(--accent-dark);border-color:var(--accent-dark)}
+.btn[disabled]{opacity:.6;cursor:progress}
+.hint{color:var(--muted);font-size:13px}
+
+/* panels */
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius)}
+.link{display:flex;align-items:center;gap:14px;padding:14px 16px;margin-bottom:16px}
+.link label{font-weight:500;white-space:nowrap}
+.link input{flex:1;min-width:0;height:40px;padding:0 12px;border:1px solid var(--line);border-radius:8px;background:var(--paper);color:var(--muted)}
+
+.stats{display:grid;grid-template-columns:repeat(4,1fr);margin-bottom:16px}
+.stat{padding:16px 20px;border-left:1px solid var(--line)}
+.stat:first-child{border-left:0}
+.stat b{display:block;font-size:26px;font-weight:600;letter-spacing:-.02em;line-height:1.2}
+.stat span{color:var(--muted);font-size:13px}
+.stat small{font-size:14px;color:var(--muted);font-weight:400}
+
+/* table */
+.toolbar{display:flex;gap:10px;padding:14px 16px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.toolbar input[type=search],.toolbar select{height:38px;padding:0 12px;border:1px solid var(--line);border-radius:8px;background:var(--surface)}
+.toolbar input[type=search]{flex:1;min-width:180px}
+.toolbar .btn{height:38px}
+table{width:100%;border-collapse:collapse}
+th{padding:10px 16px;text-align:left;font-weight:500;font-size:13px;color:var(--muted);background:#FAFBFC;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:14px 16px;border-bottom:1px solid var(--line);vertical-align:top}
+tbody tr:last-child td{border-bottom:0}
+tbody tr:hover{background:#FAFBFC}
+.who b{font-weight:500;display:block}
+.who span,.email{color:var(--muted);font-size:13px}
+.email{white-space:nowrap}
+.rating{display:flex;align-items:center;gap:8px;white-space:nowrap}
+.pips{display:flex;gap:2px}
+.pips i{width:6px;height:16px;border-radius:2px;background:var(--line)}
+.pips i.on{background:var(--accent)}
+.rating b{font-weight:600;font-size:14px}
+.tag{display:inline-block;padding:2px 9px;border-radius:99px;font-size:12.5px;font-weight:500;background:#EEF1F4;color:var(--muted)}
+.tag.yes{background:#E6F4EC;color:var(--good)}
+.tag.maybe{background:#FBF0DC;color:var(--warn)}
+.tag.no{background:#FBE9E7;color:var(--bad)}
+.text {
+    max-width: 380px;
+    display: -webkit-box;
+    line-clamp: 3;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    overflow-wrap: anywhere;
+}
+.text.none{color:var(--muted)}
+.date{white-space:nowrap;color:var(--muted);font-size:14px}
+.empty{padding:44px 20px;text-align:center;color:var(--muted)}
+.empty p{margin:0 0 14px}
+.pager{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 16px;border-top:1px solid var(--line);font-size:14px;color:var(--muted)}
+.pager div{display:flex;gap:8px}
+.pager a{padding:6px 12px;border:1px solid var(--line);border-radius:8px;color:var(--ink);text-decoration:none}
+.pager a:hover{background:#FAFBFC}
+
+/* toast */
+.toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,20px);opacity:0;pointer-events:none;
+  background:var(--ink);color:#fff;padding:11px 18px;border-radius:8px;font-size:14px;transition:.25s;z-index:50;max-width:calc(100vw - 32px)}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+.toast.bad{background:var(--bad)}
+
+/* responsive */
+@media (max-width:860px){
+  .col-email{display:none}
+  .stats{grid-template-columns:repeat(2,1fr)}
+  .stat:nth-child(3){border-left:0}
+  .stat:nth-child(n+3){border-top:1px solid var(--line)}
+}
+@media (max-width:760px){
+  .wrap{padding:20px 14px 32px}
+  .toolbar input[type=search]{flex-basis:100%}
+  .toolbar select{flex:1}
+  .link{flex-wrap:wrap}
+  .link input{flex-basis:100%;order:3}
+  .link .btn{margin-left:auto}
+  .actions{width:100%}.actions .btn{flex:1;justify-content:center}.hint{width:100%}
+  thead{display:none}
+  tbody tr{display:block;padding:12px 16px;border-bottom:1px solid var(--line)}
+  tbody tr:last-child{border-bottom:0}
+  td{display:flex;gap:12px;padding:3px 0;border:0}
+  td::before{content:attr(data-label);flex:0 0 74px;color:var(--muted);font-size:13px;padding-top:1px}
+  .col-email{display:flex;white-space:normal;word-break:break-word}
+  td.cust{font-size:16px;padding-bottom:6px}
+  td.cust::before{display:none}
+  .text{max-width:none}
+  .pager{flex-direction:column;align-items:stretch;text-align:center}.pager div{justify-content:center}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <div class="title">
+      <h1>Customer feedback</h1>
+      <p>{{ total }} response{{ total|pluralize }} collected</p>
+    </div>
+    <div class="actions">
+      <span class="hint" id="export-hint">
+        {% if last_export %}Sheet updated {{ last_export|date:"d M, H:i" }}{% else %}Sheet not created yet{% endif %}
+      </span>
+      <button class="btn" id="export-btn" type="button">
+        <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M10 3v9m0 0 3.5-3.5M10 12 6.5 8.5M4 14v1.5A1.5 1.5 0 0 0 5.5 17h9a1.5 1.5 0 0 0 1.5-1.5V14"/></svg>
+        Export to Excel
+      </button>
+      <button class="btn primary" id="open-mail" type="button">
+        <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="4.5" width="15" height="11" rx="2"/><path d="m3 6 7 5 7-5"/></svg>
+        Send email
+      </button>
+    </div>
+  </header>
+
+  <section class="panel link" aria-label="Feedback form link">
+    <label for="form-link">Feedback form link</label>
+    <input id="form-link" type="text" readonly value="{{ form_link }}">
+    <button class="btn" id="copy-btn" type="button">
+      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="7" width="9.5" height="9.5" rx="2"/><path d="M13 7V5.5A1.5 1.5 0 0 0 11.5 4h-6A1.5 1.5 0 0 0 4 5.5v6A1.5 1.5 0 0 0 5.5 13H7"/></svg>
+      <span>Copy</span>
+    </button>
+  </section>
+
+  <section class="panel stats" aria-label="Summary">
+    <div class="stat"><b>{{ total }}</b><span>Total responses</span></div>
+    <div class="stat"><b>{% if avg %}{{ avg|floatformat:1 }} <small>/ 5</small>{% else %}–{% endif %}</b><span>Average rating</span></div>
+    <div class="stat"><b>{% if recommend_pct is not None %}{{ recommend_pct }}%{% else %}–{% endif %}</b><span>Would recommend</span></div>
+    <div class="stat"><b>{% if last %}{{ last|date:"d M" }}{% else %}–{% endif %}</b><span>Latest response</span></div>
+  </section>
+
+  <section class="panel">
+    <form class="toolbar" method="get">
+      <input type="search" name="q" value="{{ q }}" placeholder="Search customer, company or feedback" aria-label="Search feedback">
+      <select name="rating" aria-label="Filter by rating" onchange="this.form.submit()">
+        <option value="">All ratings</option>
+        {% for n in "54321" %}<option value="{{ n }}" {% if rating == n %}selected{% endif %}>{{ n }} star{{ n|pluralize }}</option>{% endfor %}
+      </select>
+      <button class="btn" type="submit">Search</button>
+      {% if filtered %}<a class="btn" href="{% url 'feedback:dashboard' %}">Clear</a>{% endif %}
+    </form>
+
+    {% if page.object_list %}
+    <table>
+      <thead><tr>
+        <th>Customer</th><th class="col-email">Email</th><th>Rating</th><th>Recommend</th><th>Feedback</th><th>Date</th>
+      </tr></thead>
+      <tbody>
+      {% for f in page.object_list %}
+        <tr>
+          <td class="cust who"><div><b>{{ f.customer_name }}</b>{% if f.company %}<span>{{ f.company }}</span>{% endif %}</div></td>
+          <td class="col-email email" data-label="Email">{{ f.email|default:"–" }}</td>
+          <td data-label="Rating"><div class="rating">
+            <div class="pips" aria-hidden="true">{% for s in pips %}<i class="{% if s <= f.rating %}on{% endif %}"></i>{% endfor %}</div>
+            <b>{{ f.rating }}<span class="sr-only" style="position:absolute;left:-9999px"> out of 5</span></b>
+          </div></td>
+          <td data-label="Recommend"><span class="tag {{ f.recommend }}">{{ f.get_recommend_display }}</span></td>
+          <td data-label="Feedback"><div class="text {% if not f.comments %}none{% endif %}">{{ f.comments|default:"No comment" }}</div></td>
+          <td class="date" data-label="Date">{{ f.created_at|date:"d M Y" }}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    <div class="pager">
+      <span>Showing {{ page.start_index }}–{{ page.end_index }} of {{ page.paginator.count }}</span>
+      {% if page.has_other_pages %}<div>
+        {% if page.has_previous %}<a href="?{% if qs %}{{ qs }}&{% endif %}page={{ page.previous_page_number }}">Previous</a>{% endif %}
+        {% if page.has_next %}<a href="?{% if qs %}{{ qs }}&{% endif %}page={{ page.next_page_number }}">Next</a>{% endif %}
+      </div>{% endif %}
+    </div>
+    {% elif filtered %}
+    <div class="empty"><p>No feedback matches your search.</p><a class="btn" href="{% url 'feedback:dashboard' %}">Clear filters</a></div>
+    {% else %}
+    <div class="empty"><p>No feedback yet. Copy the form link above and send it to your first customers.</p>
+      <button class="btn primary" type="button" id="open-mail-empty">Send email</button></div>
+    {% endif %}
+  </section>
+</div>
+
+{{ email_subject|json_script:"mail-subject" }}
+{{ email_body|json_script:"mail-body" }}
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function(){
+  var csrf = document.querySelector('meta[name=csrf-token]').content;
+  var $ = function(id){return document.getElementById(id)};
+  var toastEl = $('toast'), toastTimer;
+  function toast(msg, bad){
+    toastEl.textContent = msg; toastEl.className = 'toast show' + (bad ? ' bad' : '');
+    clearTimeout(toastTimer); toastTimer = setTimeout(function(){toastEl.className='toast'}, 3200);
+  }
+
+  /* copy link */
+  $('copy-btn').addEventListener('click', function(){
+    var input = $('form-link'), label = this.querySelector('span');
+    function done(){ label.textContent = 'Copied'; toast('Form link copied'); setTimeout(function(){label.textContent='Copy'}, 1800); }
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(input.value).then(done, function(){ input.select(); document.execCommand('copy'); done(); });
+    } else { input.select(); document.execCommand('copy'); done(); }
+  });
+
+  /* export: updates the one shared workbook, then downloads it */
+  $('export-btn').addEventListener('click', function(){
+    var btn = this; btn.disabled = true;
+    fetch("{% url 'feedback:export' %}", {method:'POST', headers:{'X-CSRFToken':csrf}})
+      .then(function(r){return r.json().then(function(j){return {ok:r.ok, j:j}})})
+      .then(function(res){
+        if (!res.ok) { toast(res.j.error || 'Export failed', true); return; }
+        $('export-hint').textContent = 'Sheet updated just now';
+        toast('Analysis sheet updated with ' + res.j.count + ' response' + (res.j.count === 1 ? '' : 's'));
+        window.location.href = res.j.download;
+      })
+      .catch(function(){ toast('Export failed. Check your connection.', true); })
+      .then(function(){ btn.disabled = false; });
+  });
+
+  /* send email: opens Outlook on the web (new browser tab) with an editable draft; the user fills in "To" there */
+  var mailDraft = {
+    subject: JSON.parse($('mail-subject').textContent),
+    body: JSON.parse($('mail-body').textContent)
+  };
+  function openMail(){
+    var body = mailDraft.body.replace(/\r?\n/g, '\r\n');
+    var url = 'https://outlook.office.com/mail/deeplink/compose?subject=' + encodeURIComponent(mailDraft.subject) +
+              '&body=' + encodeURIComponent(body);
+    var win = window.open(url, '_blank');
+    if (win) { win.opener = null; }
+    else { toast('Your browser blocked the new tab. Allow pop-ups for this site and try again.', true); }
+  }
+  $('open-mail').addEventListener('click', openMail);
+  var empty = $('open-mail-empty'); if (empty) empty.addEventListener('click', openMail);
+})();
+</script>
+</body>
+</html>
