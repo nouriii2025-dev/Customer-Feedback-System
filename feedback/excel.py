@@ -14,8 +14,11 @@ from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
 from openpyxl.utils import get_column_letter
 
 HEADERS = ["ID", "Submitted", "Customer", "Company", "Email",
+            "Quality Rating (1-5)",
+            "Timely Delivery Rating (1-5)",
+            "Communication Rating (1-5)",
            "Rating (1-5)", "Would recommend", "Feedback"]
-WIDTHS = [7, 18, 24, 24, 30, 13, 17, 70]
+WIDTHS = [7, 18, 24, 24, 30, 20, 24, 26, 13, 17, 70]
 LAST_ROW = 100000
 _lock = threading.Lock()
 
@@ -44,6 +47,9 @@ def _fill_feedback_sheet(ws, rows):
             f.id,
             timezone.localtime(f.created_at).replace(tzinfo=None),
             f.customer_name, f.company, f.email,
+            f.quality_rating,
+            f.timely_delivery_rating,
+            f.communication_rating,
             f.rating, f.get_recommend_display(), f.comments,
         ])
     for r in ws.iter_rows(min_row=2):

@@ -178,13 +178,38 @@ tbody tr:hover{background:#FAFBFC}
     {% if page.object_list %}
     <table>
       <thead><tr>
-        <th>Customer</th><th class="col-email">Email</th><th>Rating</th><th>Recommend</th><th>Feedback</th><th>Date</th>
+        <th>Customer</th>
+        <th class="col-email">Email</th>
+        <th>Quality</th>
+        <th>Timely Delivery</th>
+        <th>Communication</th>
+        <th>Rating</th>
+        <th>Recommend</th>
+        <th>Feedback</th>
+        <th>Date</th>
       </tr></thead>
       <tbody>
       {% for f in page.object_list %}
         <tr>
           <td class="cust who"><div><b>{{ f.customer_name }}</b>{% if f.company %}<span>{{ f.company }}</span>{% endif %}</div></td>
           <td class="col-email email" data-label="Email">{{ f.email|default:"–" }}</td>
+          <td data-label="Quality"><div class="rating">
+            <div class="pips" aria-hidden="true">{% for s in pips %}<i class="{% if s <= f.quality_rating %}on{% endif %}"></i>{% endfor %}</div>
+            <b>{{ f.quality_rating }}<span class="sr-only" style="position:absolute;left:-9999px"> out of 5</span></b>
+          </div>
+          </td>
+
+          <td data-label="Timely Delivery"><div class="rating">
+            <div class="pips" aria-hidden="true">{% for s in pips %}<i class="{% if s <= f.timeliness_rating %}on{% endif %}"></i>{% endfor %}</div>
+            <b>{{ f.timeliness_rating }}<span class="sr-only" style="position:absolute;left:-9999px"> out of 5</span></b>
+          </div>
+          </td>
+
+          <td data-label="Communication"><div class="rating">
+            <div class="pips" aria-hidden="true">{% for s in pips %}<i class="{% if s <= f.communication_rating %}on{% endif %}"></i>{% endfor %}</div>
+            <b>{{ f.communication_rating }}<span class="sr-only" style="position:absolute;left:-9999px"> out of 5</span></b>
+          </div>
+          </td>
           <td data-label="Rating"><div class="rating">
             <div class="pips" aria-hidden="true">{% for s in pips %}<i class="{% if s <= f.rating %}on{% endif %}"></i>{% endfor %}</div>
             <b>{{ f.rating }}<span class="sr-only" style="position:absolute;left:-9999px"> out of 5</span></b>

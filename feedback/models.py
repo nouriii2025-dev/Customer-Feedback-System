@@ -8,6 +8,24 @@ class Feedback(models.Model):
     customer_name = models.CharField(max_length=120)
     company = models.CharField(max_length=120, blank=True)
     email = models.EmailField(blank=True)
+    quality_rating = models.PositiveSmallIntegerField(
+    validators=[MinValueValidator(1), MaxValueValidator(5)],
+    null=True,
+    blank=True,
+    )
+
+    timeliness_rating = models.PositiveSmallIntegerField(
+        validators=[MinValueValidator(1), MaxValueValidator(5)],
+        null=True,
+        blank=True,
+    )
+
+    communication_rating = models.PositiveSmallIntegerField(
+        validators=[MinValueValidator(1), MaxValueValidator(5)],
+        null=True,
+        blank=True,
+    )
+
     rating = models.PositiveSmallIntegerField(
         validators=[MinValueValidator(1), MaxValueValidator(5)]
     )

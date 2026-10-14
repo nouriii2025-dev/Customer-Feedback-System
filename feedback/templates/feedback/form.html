@@ -194,7 +194,6 @@ textarea{min-height:128px;resize:vertical;line-height:1.55}
 
       <div style="--d:0.18s" class="f {% if form.email.errors %}invalid{% endif %}">
         <label for="id_email">Email 
-          <!-- <span class="opt">Optional</span> -->
         </label>
         <div class="input">
           <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="m4 7 8 6 8-6"/></svg>
@@ -203,10 +202,65 @@ textarea{min-height:128px;resize:vertical;line-height:1.55}
         {{ form.email.errors }}
       </div>
 
+      
+      <fieldset style="--d:0.24s" class="f {% if form.quality_rating.errors %}invalid{% endif %}">
+        <legend>{{ form.quality_rating.label }}</legend>
+        <div class="rate">
+          <div class="stars" id="fb-quality-stars">
+            {% for radio in form.quality_rating reversed %}
+              {{ radio.tag }}
+              <label for="{{ radio.id_for_label }}" data-v="{{ radio.data.value }}">
+                <span class="sr">{{ radio.choice_label }} star{{ radio.data.value|pluralize }}</span>
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5l2.9 6.1 6.6.9-4.8 4.6 1.2 6.6L12 17.6 6.1 20.7l1.2-6.6L2.5 9.5l6.6-.9z"/></svg>
+              </label>
+            {% endfor %}
+          </div>
+          <p class="caption" id="fb-quality-caption" aria-live="polite">Select a star rating</p>
+        </div>
+        {{ form.quality_rating.errors }}
+      </fieldset>
+
+
+      <fieldset style="--d:0.24s" class="f {% if form.timeliness_rating.errors %}invalid{% endif %}">
+        <legend>{{ form.timeliness_rating.label }}</legend>
+        <div class="rate">
+          <div class="stars" id="fb-timeliness-stars">
+            {% for radio in form.timeliness_rating reversed %}
+              {{ radio.tag }}
+              <label for="{{ radio.id_for_label }}" data-v="{{ radio.data.value }}">
+                <span class="sr">{{ radio.choice_label }} star{{ radio.data.value|pluralize }}</span>
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5l2.9 6.1 6.6.9-4.8 4.6 1.2 6.6L12 17.6 6.1 20.7l1.2-6.6L2.5 9.5l6.6-.9z"/></svg>
+              </label>
+            {% endfor %}
+          </div>
+          <p class="caption" id="fb-timeliness-caption" aria-live="polite">Select a star rating</p>
+        </div>
+        {{ form.timeliness_rating.errors }}
+      </fieldset>
+
+
+      <fieldset style="--d:0.24s" class="f {% if form.communication_rating.errors %}invalid{% endif %}">
+        <legend>{{ form.communication_rating.label }}</legend>
+        <div class="rate">
+          <div class="stars" id="fb-communication-stars">
+            {% for radio in form.communication_rating reversed %}
+              {{ radio.tag }}
+              <label for="{{ radio.id_for_label }}" data-v="{{ radio.data.value }}">
+                <span class="sr">{{ radio.choice_label }} star{{ radio.data.value|pluralize }}</span>
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5l2.9 6.1 6.6.9-4.8 4.6 1.2 6.6L12 17.6 6.1 20.7l1.2-6.6L2.5 9.5l6.6-.9z"/></svg>
+              </label>
+            {% endfor %}
+          </div>
+          <p class="caption" id="fb-communication-caption" aria-live="polite">Select a star rating</p>
+        </div>
+        {{ form.communication_rating.errors }}
+      </fieldset>
+
+
       <fieldset style="--d:0.24s" class="f {% if form.rating.errors %}invalid{% endif %}">
         <legend>{{ form.rating.label }}</legend>
         <div class="rate">
-          <div class="stars" id="fb-stars">
+          <div class="stars" id="fb-rating-stars">
             {% for radio in form.rating reversed %}
               {{ radio.tag }}
               <label for="{{ radio.id_for_label }}" data-v="{{ radio.data.value }}">
@@ -215,7 +269,7 @@ textarea{min-height:128px;resize:vertical;line-height:1.55}
               </label>
             {% endfor %}
           </div>
-          <p class="caption" id="fb-caption" aria-live="polite">Select a star rating</p>
+          <p class="caption" id="fb-rating-caption" aria-live="polite">Select a star rating</p>
         </div>
         {{ form.rating.errors }}
       </fieldset>
@@ -254,48 +308,116 @@ textarea{min-height:128px;resize:vertical;line-height:1.55}
 </main>
 
 <script>
+
 (function(){
   var form = document.getElementById('fb-form');
-  var stars = document.getElementById('fb-stars');
-  var labels = [].slice.call(stars.querySelectorAll('label'));
-  var caption = document.getElementById('fb-caption');
   var bar = document.getElementById('fb-bar');
   var txt = document.getElementById('fb-progress-text');
   var btn = document.getElementById('fb-submit');
-  var words = {1:'Poor', 2:'Fair', 3:'Good', 4:'Very good', 5:'Excellent'};
 
-  function rated(){ var c = stars.querySelector('input:checked'); return c ? +c.value : 0; }
-  function paint(n){
-    labels.forEach(function(l){ l.classList.toggle('on', +l.getAttribute('data-v') <= n); });
-    caption.textContent = n ? words[n] : 'Select a star rating';
-    caption.classList.toggle('set', !!n);
-  }
+  var words = {
+    1: 'Poor',
+    2: 'Fair',
+    3: 'Good',
+    4: 'Very good',
+    5: 'Excellent'
+  };
+
+  // Initialize each rating independently.
+  var ratingIds = [
+    ['fb-quality-stars', 'fb-quality-caption'],
+    ['fb-timeliness-stars', 'fb-timeliness-caption'],
+    ['fb-communication-stars', 'fb-communication-caption'],
+    ['fb-rating-stars', 'fb-rating-caption']
+  ];
+
+  var ratings = ratingIds.map(function(ids){
+    var stars = document.getElementById(ids[0]);
+    var caption = document.getElementById(ids[1]);
+
+    if (!stars || !caption) return null;
+
+    var labels = Array.from(stars.querySelectorAll('label'));
+
+    function rated(){
+      var checked = stars.querySelector('input:checked');
+      return checked ? Number(checked.value) : 0;
+    }
+
+    function paint(n){
+      labels.forEach(function(label){
+        label.classList.toggle(
+          'on',
+          Number(label.getAttribute('data-v')) <= n
+        );
+      });
+
+      caption.textContent = n ? words[n] : 'Select a star rating';
+      caption.classList.toggle('set', !!n);
+    }
+
+    stars.classList.add('js');
+
+    labels.forEach(function(label){
+      label.addEventListener('mouseenter', function(){
+        paint(Number(label.getAttribute('data-v')));
+      });
+    });
+
+    stars.addEventListener('mouseleave', function(){
+      paint(rated());
+    });
+
+    stars.addEventListener('change', function(){
+      paint(rated());
+      progress();
+    });
+
+    paint(rated());
+
+    return { rated: rated };
+  });
+
   function progress(){
     var done = 0;
+    var required = 6;
+
     if (form.elements.customer_name.value.trim()) done++;
-    if (rated()) done++;
-    if (form.querySelector('input[name=recommend]:checked')) done++;
-    bar.style.width = (done / 3 * 100) + '%';
-    txt.textContent = done + ' of 3 required answered';
+
+    ratings.forEach(function(rating){
+      if (rating && rating.rated()) done++;
+    });
+
+    if (form.querySelector('input[name="recommend"]:checked')) done++;
+
+    bar.style.width = (done / required * 100) + '%';
+    txt.textContent = done + ' of ' + required + ' required answered';
   }
 
-  stars.classList.add('js');
-  labels.forEach(function(l){ l.addEventListener('mouseenter', function(){ paint(+l.getAttribute('data-v')); }); });
-  stars.addEventListener('mouseleave', function(){ paint(rated()); });
-  stars.addEventListener('change', function(){ paint(rated()); });
   form.addEventListener('input', progress);
   form.addEventListener('change', progress);
-  paint(rated()); progress();
+  progress();
 
   form.addEventListener('submit', function(){
     btn.classList.add('loading');
-    setTimeout(function(){ btn.disabled = true; }, 0);
+    setTimeout(function(){
+      btn.disabled = true;
+    }, 0);
   });
-  window.addEventListener('pageshow', function(){ btn.classList.remove('loading'); btn.disabled = false; progress(); });
 
-  var bad = form.querySelector('.invalid input, .invalid textarea');
+  window.addEventListener('pageshow', function(){
+    btn.classList.remove('loading');
+    btn.disabled = false;
+    progress();
+  });
+
+  var bad = form.querySelector(
+    '.invalid input, .invalid textarea'
+  );
+
   if (bad) bad.focus();
 })();
+
 </script>
 </body>
 </html>
